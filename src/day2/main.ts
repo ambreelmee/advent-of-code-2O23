@@ -1,7 +1,4 @@
-import fs from "fs";
-import path from "path";
-
-import { fileURLToPath } from "url";
+import { readTextFile } from "../utils";
 import { Color, getAllGamePower, getSumOfPossibleGames } from "./utils";
 
 const formatData = (input: string[]) => {
@@ -18,13 +15,7 @@ const formatData = (input: string[]) => {
 };
 
 const main = () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const input = fs
-    .readFileSync(path.join(__dirname, "./input.txt"))
-    .toString()
-    .split("\n")
-    .filter((game) => game !== "");
+  const input = readTextFile(2, "input");
 
   const formattedData = formatData(input);
   const total = getSumOfPossibleGames(formattedData);

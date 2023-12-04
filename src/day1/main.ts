@@ -1,18 +1,10 @@
-import fs from "fs";
-import path from "path";
-
-import { fileURLToPath } from "url";
+import { readTextFile } from "../utils";
 import { getCalibrationValues } from "./utils";
 
 const main = () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const data = fs
-    .readFileSync(path.join(__dirname, "./input.txt"))
-    .toString()
-    .split("\n");
+  const input = readTextFile(1, "input");
 
-  const result = data.reduce(
+  const result = input.reduce(
     (total, text) => total + getCalibrationValues(text),
     0
   );
