@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { fileURLToPath } from "url";
-import { getSumOfValidNumbers } from "./utils";
+import { getGearRatio } from "./utils";
 
 const main = () => {
   const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +12,8 @@ const main = () => {
     .toString()
     .split("\n")
     .filter((line) => line !== "");
-  const result = getSumOfValidNumbers(input);
+  //   const result = getSumOfValidNumbers(input);
+  const result = getGearRatio(input);
   console.log(result);
 };
 
