@@ -34,12 +34,32 @@ const getCategoryDestinationNumber = (
   return sourceNumber;
 };
 
-export const formatData = (input: string[]) => {
-  const seeds = input[0]
-    .split(":")[1]
-    .split(" ")
-    .filter((value) => value !== "")
-    .map((value) => Number(value));
+export const formatData = (problemPart: "1" | "2", input: string[]) => {
+  const seedFormattingFunction =
+    problemPart === "1" ? formatSeedPart1 : formatSeedPart2;
+  return {
+    seeds: seedFormattingFunction(input[0]),
+    categories: formatCategories(input),
+  };
+};
+
+const formatSeedPart2 = (seedRanges: string) => {
+  const rawSeeds = formatSeedPart1(seedRanges);
+  const seeds = [];
+  let index = 0;
+  while (index < rawSeeds.length) {
+    const startSeed = rawSeeds[index];
+    const range = rawSeeds[index + 1];
+    const seedsToAdd = new Array(range)
+      .fill(0)
+      .map((_, index) => index + startSeed);
+    seeds.push(...seedsToAdd);
+    index += 2;
+  }
+  return seeds;
+};
+
+const formatCategories = (input: string[]) => {
   const categories = {} as Record<string, Mapping[]>;
   let index = 0;
   while (index < input.length) {
@@ -66,5 +86,12 @@ export const formatData = (input: string[]) => {
     }
     index++;
   }
-  return { seeds, categories };
+  return categories;
 };
+
+const formatSeedPart1 = (seeds: string) =>
+  seeds
+    .split(":")[1]
+    .split(" ")
+    .filter((value) => value !== "")
+    .map((value) => Number(value));
