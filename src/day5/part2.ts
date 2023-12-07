@@ -48,7 +48,6 @@ const getLowestLocationNumberForSeedRange = (
     },
     [seedRange]
   );
-  console.log({ allRanges });
   return Math.min(...allRanges.map(({ start }) => start));
 };
 
@@ -59,64 +58,64 @@ const getCategoryDestinationRange = (
   if (categoriesMapping.length === 0) {
     return [seedRange];
   }
-  const ranges = [] as SeedRange[];
   const [firstMapping, ...otherMappings] = categoriesMapping;
   const seedRangeEnd = seedRange.start + seedRange.range;
   const mappingEnd = firstMapping.sourceStart + firstMapping.range;
-  if (seedRange.start < firstMapping.sourceStart) {
-    if (seedRangeEnd >= firstMapping.sourceStart) {
-      const subRange = seedRangeEnd - firstMapping.sourceStart;
-
-      ranges.push({
+  if (
+    seedRange.start < firstMapping.sourceStart &&
+    seedRangeEnd >= firstMapping.sourceStart
+  ) {
+    const subRange = seedRangeEnd - firstMapping.sourceStart;
+    const seedRangePreMapping = firstMapping.sourceStart - seedRange.start;
+    const seedRangePostMapping =
+      seedRange.range - subRange - seedRangePreMapping;
+    return [
+      {
         start: firstMapping.destinationStart,
         range: subRange,
-      });
-      const seedRangePreMapping = firstMapping.sourceStart - seedRange.start;
-      ranges.push(
-        ...getCategoryDestinationRange(
-          {
-            start: seedRange.start,
-            range: seedRangePreMapping,
-          },
-          otherMappings
-        )
-      );
-      const seedRangePostMapping =
-        seedRange.range - subRange - seedRangePreMapping;
-      if (seedRangePostMapping > 0) {
-        ranges.push(
-          ...getCategoryDestinationRange(
+      },
+      ...getCategoryDestinationRange(
+        {
+          start: seedRange.start,
+          range: seedRangePreMapping,
+        },
+        otherMappings
+      ),
+      ...(seedRangePostMapping > 0
+        ? getCategoryDestinationRange(
             {
               start: firstMapping.sourceStart + firstMapping.range,
               range: seedRangePostMapping,
             },
             otherMappings
           )
-        );
-      }
-    }
-  } else if (seedRange.start < mappingEnd) {
-    const subRange = mappingEnd - seedRange.start;
-    ranges.push({
-      start:
-        firstMapping.destinationStart -
-        firstMapping.sourceStart +
-        seedRange.start,
-      range: Math.min(subRange, seedRange.range),
-    });
-    const postMappingRange = seedRangeEnd - mappingEnd;
-    if (postMappingRange > 0) {
-      ranges.push(
-        ...getCategoryDestinationRange(
-          {
-            start: mappingEnd,
-            range: postMappingRange,
-          },
-          otherMappings
-        )
-      );
-    }
+        : []),
+    ];
   }
-  console.log(ranges);
-  return ranges.length > 0 ? ranges : [seedRange];
+  if (
+    seedRange.start >= firstMapping.sourceStart &&
+    seedRange.start < mappingEnd
+  ) {
+    const subRange = mappingEnd - seedRange.start;
+    const postMappingRange = seedRangeEnd - mappingEnd;
+    return [
+      {
+        start:
+          firstMapping.destinationStart -
+          firstMapping.sourceStart +
+          seedRange.start,
+        range: Math.min(subRange, seedRange.range),
+      },
+      ...(postMappingRange > 0
+        ? getCategoryDestinationRange(
+            {
+              start: mappingEnd,
+              range: postMappingRange,
+            },
+            otherMappings
+          )
+        : []),
+    ];
+  }
+  return getCategoryDestinationRange(seedRange, otherMappings);
 };
