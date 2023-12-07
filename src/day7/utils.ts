@@ -1,20 +1,4 @@
-const orderedCard = [
-  "A",
-  "K",
-  "Q",
-  "J",
-  "T",
-  "9",
-  "8",
-  "7",
-  "6",
-  "5",
-  "4",
-  "3",
-  "2",
-];
-
-type HandType =
+export type HandType =
   | "FiveOfAKind"
   | "FourOfAKind"
   | "FullHouse"
@@ -23,87 +7,23 @@ type HandType =
   | "OnePair"
   | "HighCard";
 
-interface Hand {
+export interface Hand {
   hand: string[];
   bid: number;
   type: HandType;
 }
 
-export const formatData = (input: string[]) => {
-  return input.map((data) => {
-    const [hand, bid] = data.split(" ");
-    const formattedHand = hand.split("");
-    return {
-      hand: formattedHand,
-      bid: Number(bid),
-      type: getHandType(formattedHand),
-    };
-  });
-};
+export const orderedTyped = [
+  "HighCard",
+  "OnePair",
+  "TwoPair",
+  "ThreeOfAKind",
+  "FullHouse",
+  "FourOfAKind",
+  "FiveOfAKind",
+];
 
-export const getTotalWinning = (orderedHands: Hand[]) =>
-  orderedHands.reduce(
-    (winning, hand, index) => winning + hand.bid * (index + 1),
-    0
-  );
-
-export const orderHands = (hands: Hand[]) => {
-  const orderedTyped = [
-    "HighCard",
-    "OnePair",
-    "TwoPair",
-    "ThreeOfAKind",
-    "FullHouse",
-    "FourOfAKind",
-    "FiveOfAKind",
-  ];
-  const handsByType = new Array(orderedTyped.length).fill([]);
-  hands.forEach((hand) => {
-    const handsByTypeIndex = orderedTyped.indexOf(hand.type);
-    handsByType[handsByTypeIndex] = positionHandInAscendingOrder(
-      hand,
-      handsByType[handsByTypeIndex]
-    );
-  });
-  console.log(handsByType);
-  return handsByType.flat();
-};
-
-const positionHandInAscendingOrder = (hand: Hand, orderedHands: Hand[]) => {
-  let index = 0;
-  while (index < orderedHands.length) {
-    if (!isHand1Better(hand.hand, orderedHands[index].hand)) {
-      return [
-        ...orderedHands.slice(0, index),
-        hand,
-        ...orderedHands.slice(index),
-      ];
-    }
-    index++;
-  }
-  return [...orderedHands, hand];
-};
-
-const isHand1Better = (hand1: string[], hand2: string[]): boolean => {
-  const [hand1FirstElement, ...restOfHand1] = hand1;
-  const [hand2FirstElement, ...restOfHand2] = hand2;
-
-  if (
-    orderedCard.indexOf(hand1FirstElement) <
-    orderedCard.indexOf(hand2FirstElement)
-  ) {
-    return true;
-  }
-  if (
-    orderedCard.indexOf(hand1FirstElement) >
-    orderedCard.indexOf(hand2FirstElement)
-  ) {
-    return false;
-  }
-  return isHand1Better(restOfHand1, restOfHand2);
-};
-
-const getHandType = (hand: string[]): HandType => {
+export const getHandType = (hand: string[]): HandType => {
   const distinctValues = new Set(hand);
   if (distinctValues.size === 1) {
     return "FiveOfAKind";
@@ -117,7 +37,7 @@ const getHandType = (hand: string[]): HandType => {
   }
   if (distinctValues.size === 3) {
     const distinctValuesCount = [...distinctValues].map(
-      (value, index) => hand.filter((handValue) => handValue === value).length
+      (value) => hand.filter((handValue) => handValue === value).length
     );
     if (distinctValuesCount.some((count) => count === 3)) {
       return "ThreeOfAKind";
@@ -128,4 +48,65 @@ const getHandType = (hand: string[]): HandType => {
     return "OnePair";
   }
   return "HighCard";
+};
+
+export const getTotalWinning = (orderedHands: Hand[]) =>
+  orderedHands.reduce(
+    (winning, hand, index) => winning + hand.bid * (index + 1),
+    0
+  );
+
+export const orderHands = (hands: Hand[], orderedCards: string[]) => {
+  const handsByType = new Array(orderedTyped.length).fill([]);
+  hands.forEach((hand) => {
+    const handsByTypeIndex = orderedTyped.indexOf(hand.type);
+    handsByType[handsByTypeIndex] = positionHandInAscendingOrder(
+      hand,
+      handsByType[handsByTypeIndex],
+      orderedCards
+    );
+  });
+  return handsByType.flat();
+};
+
+const positionHandInAscendingOrder = (
+  hand: Hand,
+  orderedHands: Hand[],
+  orderedCards: string[]
+) => {
+  let index = 0;
+  while (index < orderedHands.length) {
+    if (!isHand1Better(hand.hand, orderedHands[index].hand, orderedCards)) {
+      return [
+        ...orderedHands.slice(0, index),
+        hand,
+        ...orderedHands.slice(index),
+      ];
+    }
+    index++;
+  }
+  return [...orderedHands, hand];
+};
+
+const isHand1Better = (
+  hand1: string[],
+  hand2: string[],
+  orderedCards: string[]
+): boolean => {
+  const [hand1FirstElement, ...restOfHand1] = hand1;
+  const [hand2FirstElement, ...restOfHand2] = hand2;
+
+  if (
+    orderedCards.indexOf(hand1FirstElement) <
+    orderedCards.indexOf(hand2FirstElement)
+  ) {
+    return true;
+  }
+  if (
+    orderedCards.indexOf(hand1FirstElement) >
+    orderedCards.indexOf(hand2FirstElement)
+  ) {
+    return false;
+  }
+  return isHand1Better(restOfHand1, restOfHand2, orderedCards);
 };
