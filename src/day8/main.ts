@@ -1,11 +1,12 @@
 import { readTextFile } from "../utils";
-import { countStepToReachEnd, formatData } from "./utils";
+import { countStepToReachEndPart2 } from "./part2";
+import { formatData } from "./utils";
 
 const main = () => {
   const input = readTextFile(8, "input");
   const { nodes, directions } = formatData(input);
   console.log({ nodes, directions });
-  const result = countStepToReachEnd(directions, nodes);
+  const result = countStepToReachEndPart2(directions, nodes);
   console.log({ result });
 };
 

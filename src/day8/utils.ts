@@ -1,6 +1,6 @@
-type Direction = "L" | "R";
+export type Direction = "L" | "R";
 type NodeDirections = Record<Direction, string>;
-type Nodes = Record<string, NodeDirections>;
+export type Nodes = Record<string, NodeDirections>;
 
 export const formatData = (input: string[]) => {
   const directions = input[0].split("") as Direction[];
@@ -21,20 +21,3 @@ export const formatData = (input: string[]) => {
 
 const formatValue = (node: string) =>
   node.replaceAll("(", "").replaceAll(")", "").trim();
-
-export const countStepToReachEnd = (directions: Direction[], nodes: Nodes) => {
-  const startingNode = "AAA";
-  let nextNode = nodes[startingNode][directions[0]];
-  let index = 1;
-  let stepCount = 1;
-  while (nextNode !== "ZZZ") {
-    console.log({ nextNode });
-    nextNode = nodes[nextNode][directions[index]];
-    index = index < directions.length - 1 ? index + 1 : 0;
-    stepCount++;
-  }
-  return stepCount;
-};
-
-// const getNextNode = (currentNode: string, direction: Direction, nodes: Nodes) =>
-//   nodes[currentNode][direction];
