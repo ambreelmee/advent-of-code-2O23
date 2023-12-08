@@ -4,25 +4,64 @@ export const countStepToReachEndPart2 = (
   directions: Direction[],
   nodes: Nodes
 ) => {
-  let nextNodeIds = getStartingNodeIds(nodes);
-  let index = 0;
-  let stepCount = 0;
-  while (!isFinished(nextNodeIds)) {
-    nextNodeIds = nextNodeIds.map((nodeId) => nodes[nodeId][directions[index]]);
+  return getStartingNodeIds(nodes).reduce(
+    (result, nodeId) =>
+      findPPMC(result, getOutputNodes(nodeId, directions, nodes).endingIndex),
+    1
+  );
+};
 
-    index = index < directions.length - 1 ? index + 1 : 0;
-    stepCount++;
-    console.log({
-      nextNodeIds,
-      nextIndex: index,
-      stepCount,
-    });
+const findPPMC = (number1: number, number2: number) => {
+  let greatestNumber = Math.max(number1, number2);
+  let smallestNumber = Math.min(number1, number2);
+  let rest = greatestNumber % smallestNumber;
+  if (rest === 0) {
+    return greatestNumber;
   }
-  return stepCount;
+  while (rest > 0) {
+    greatestNumber = smallestNumber;
+    smallestNumber = rest;
+    rest = greatestNumber % smallestNumber;
+  }
+  return (number1 * number2) / smallestNumber;
 };
 
 const getStartingNodeIds = (nodes: Nodes) =>
   Object.keys(nodes).filter((nodeId) => nodeId.endsWith("A"));
 
-const isFinished = (nodeIds: string[]) =>
-  nodeIds.every((node) => node.endsWith("Z"));
+interface NodeInfo {
+  nodeId: string;
+  directionIndex: number;
+}
+const getOutputNodes = (
+  nodeId: string,
+  directions: Direction[],
+  nodes: Nodes
+) => {
+  let index = 0;
+  const outputNodes = [] as NodeInfo[];
+  let nextNode = { nodeId, directionIndex: index };
+  let nodeIndex = outputNodes.findIndex(
+    (node) =>
+      node.nodeId === nextNode.nodeId &&
+      node.directionIndex == nextNode.directionIndex
+  );
+
+  while (nodeIndex === -1) {
+    outputNodes.push(nextNode);
+    index = index < directions.length - 1 ? index + 1 : 0;
+    nextNode = {
+      nodeId: nodes[nextNode.nodeId][directions[nextNode.directionIndex]],
+      directionIndex: index,
+    };
+    nodeIndex = outputNodes.findIndex(
+      (node) =>
+        node.nodeId === nextNode.nodeId &&
+        node.directionIndex == nextNode.directionIndex
+    );
+  }
+  const endingIndex = outputNodes.findIndex(
+    (outputNode, index) => outputNode.nodeId.endsWith("Z")!
+  );
+  return { outputNodes, nodeIndex, endingIndex };
+};
