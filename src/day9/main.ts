@@ -1,10 +1,11 @@
 import { readTextFile } from "../utils";
-import { formatData, getSumOfAllNextValue } from "./utils";
+import { getSumOfAllPreviousValues } from "./part2";
+import { formatData } from "./utils";
 
 const main = () => {
   const input = readTextFile(9, "input");
   const sequences = formatData(input);
-  const result = getSumOfAllNextValue(sequences);
+  const result = getSumOfAllPreviousValues(sequences);
   console.log(result);
 };
 
