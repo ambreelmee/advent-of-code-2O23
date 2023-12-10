@@ -7,118 +7,60 @@ type Position = {
   lineIndex: number;
   columnIndex: number;
 };
-type DirectionPosition = Record<Direction, Position | null>;
 
-type Point = DirectionPosition & { value: Tile };
-type PointInformation = Point & {
-  connections: Record<Direction, boolean>;
+type Point = {
+  connections: Direction[];
+  value: Tile;
+  position: Position;
 };
-type Area = PointInformation[][];
+export type Area = Point[][];
 
-export const formatData = (input: string[]): Area => {
-  const area = input.map((line, lineIndex) =>
-    line.split("").map((point, pointIndex) => {
-      const pointInformation = {
-        value: point as Tile,
-        top:
-          lineIndex > 0
-            ? { lineIndex: lineIndex - 1, columnIndex: pointIndex }
-            : null,
-        bottom:
-          lineIndex < input.length - 1
-            ? { lineIndex: lineIndex + 1, columnIndex: pointIndex }
-            : null,
-        left:
-          pointIndex > 0
-            ? { lineIndex: lineIndex, columnIndex: pointIndex - 1 }
-            : null,
-        right:
-          pointIndex < line.length - 1
-            ? { lineIndex: lineIndex, columnIndex: pointIndex + 1 }
-            : null,
-      };
-      return {
-        ...pointInformation,
-      };
-    })
-  );
-  return area.map((line) =>
-    line.map((point) => ({
-      ...point,
-      connections: getPipeConnections(area, point),
+export const formatData = (input: string[]): Area =>
+  input.map((line, lineIndex) =>
+    line.split("").map((point, columnIndex) => ({
+      value: point as Tile,
+      position: { lineIndex, columnIndex },
+      connections: getPipeConnections(input, { lineIndex, columnIndex }),
     }))
   );
-};
 
-
-export const findLoopWithoutRecurrence = (area: Area) => {
+export const findLoop = (area: Area) => {
   const SPosition = findSPosition(area);
-  const SPointInformation = area[SPosition.lineIndex][SPosition.columnIndex];
-  const loopPositions = [SPosition] as Position[];
-  let nextPosition = getNextPosition(SPointInformation, null);
+  const maxPosition = { lineIndex: area.length, columnIndex: area[0].length };
+  const SPointWithConnection = area[SPosition.lineIndex][SPosition.columnIndex];
+  const loop = [SPosition] as Position[];
+  let nextPosition = getNextPosition(SPointWithConnection, null, maxPosition);
   while (!isSamePosition(nextPosition, SPosition)) {
     if (nextPosition === null) {
-      return loopPositions;
+      return loop;
     }
-    loopPositions.push(nextPosition);
-    const currentPointInformation =
+    loop.push(nextPosition);
+    const currentPointWithConnections =
       area[nextPosition.lineIndex][nextPosition.columnIndex];
     nextPosition = getNextPosition(
-      currentPointInformation,
-      loopPositions[loopPositions.length - 2]
+      currentPointWithConnections,
+      loop[loop.length - 2],
+      maxPosition
     );
   }
-  return loopPositions;
-};
-
-
-export let stepCount = 0;
-
-//for some reason it's not working on the input
-export const findLoop = (
-  area: Area,
-  currentPosition: Position,
-  previousPosition: Position | null,
-  SPosition: Position
-): Position => {
-  stepCount++;
-  const nextPosition = getNextPosition(
-    area[currentPosition.lineIndex][currentPosition.columnIndex],
-    previousPosition
-  );
-  if (nextPosition === null) {
-    return currentPosition;
-  }
-
-  if (isSamePosition(nextPosition, SPosition)) {
-    return currentPosition;
-  }
-  console.log(stepCount);
-  return findLoop(area, nextPosition, currentPosition, SPosition);
+  return loop;
 };
 
 const getNextPosition = (
-  pointInformation: PointInformation,
-  previousPosition: Position | null
+  pointInformation: Point,
+  previousPosition: Position | null,
+  maxPosition: Position
 ): Position | null => {
-  const nextDirection = Object.entries(pointInformation.connections)
-    .filter(([, value]) => value)
-    .map(([string]) => string as Direction)
-    .find((direction) =>
-      isConnection(direction, pointInformation, previousPosition)
-    );
-  return nextDirection ? pointInformation[nextDirection] : null;
-};
-
-const isConnection = (
-  direction: Direction,
-  pointInformation: PointInformation,
-  previousPosition: Position | null
-) => {
-  return (
-    pointInformation.connections[direction] &&
-    !isSamePosition(previousPosition, pointInformation[direction])
+  const nextDirection = pointInformation.connections.find(
+    (direction) =>
+      !isSamePosition(
+        previousPosition,
+        getPosition(direction, pointInformation.position, maxPosition)
+      )
   );
+  return nextDirection
+    ? getPosition(nextDirection, pointInformation.position, maxPosition)
+    : null;
 };
 
 const isSamePosition = (
@@ -147,71 +89,53 @@ export const findSPosition = (area: Area): Position =>
       { lineIndex: -1, columnIndex: -1 }
     );
 
-const getPipeConnections = (area: Point[][], point: Point) => {
-  const connections = {
-    top: false,
-    bottom: false,
-    left: false,
-    right: false,
-  };
-  switch (point.value) {
+const getPipeConnections = (input: string[], position: Position) => {
+  const value = input[position.lineIndex][position.columnIndex];
+  const possibleDirections = getPossibleDirections(value as Tile);
+  return possibleDirections.filter((direction) =>
+    hasConnection(direction, input, position)
+  );
+};
+
+const getPossibleDirections = (value: Tile): Direction[] => {
+  switch (value) {
     case ".":
-      return connections;
+      return [];
     case "|":
-      return {
-        ...connections,
-        top: hasConnection("top", area, point.top),
-        bottom: hasConnection("bottom", area, point.bottom),
-      };
+      return ["top", "bottom"];
     case "-":
-      return {
-        ...connections,
-        left: hasConnection("left", area, point.left),
-        right: hasConnection("right", area, point.right),
-      };
+      return ["left", "right"];
     case "L":
-      return {
-        ...connections,
-        top: hasConnection("top", area, point.top),
-        right: hasConnection("right", area, point.right),
-      };
+      return ["top", "right"];
     case "J":
-      return {
-        ...connections,
-        top: hasConnection("top", area, point.top),
-        left: hasConnection("left", area, point.left),
-      };
+      return ["top", "left"];
     case "7":
-      return {
-        ...connections,
-        bottom: hasConnection("bottom", area, point.bottom),
-        left: hasConnection("left", area, point.left),
-      };
+      return ["bottom", "left"];
     case "F":
-      return {
-        ...connections,
-        bottom: hasConnection("bottom", area, point.bottom),
-        right: hasConnection("right", area, point.right),
-      };
+      return ["bottom", "right"];
     case "S":
-      return {
-        top: hasConnection("top", area, point.top),
-        bottom: hasConnection("bottom", area, point.bottom),
-        left: hasConnection("left", area, point.left),
-        right: hasConnection("right", area, point.right),
-      };
+      return ["top", "bottom", "left", "right"];
     default:
       throw new Error("unhandled case");
   }
 };
 
 const hasConnection = (
-  type: Direction,
-  area: Point[][],
-  position: Position | null
+  direction: Direction,
+  area: string[],
+  position: Position
 ) => {
   const possibleConnections = ["S"];
-  switch (type) {
+  const line = area[position.lineIndex];
+  const nextPosition = getPosition(direction, position, {
+    lineIndex: area.length - 1,
+    columnIndex: line.length - 1,
+  });
+  console.log({
+    line: area[position.lineIndex][position.columnIndex],
+    nextPosition,
+  });
+  switch (direction) {
     case "top":
       possibleConnections.push(...["7", "F", "|"]);
       break;
@@ -227,10 +151,33 @@ const hasConnection = (
     default:
       throw new Error("unhandled case");
   }
-  return position &&
+  return nextPosition &&
     possibleConnections.includes(
-      area[position.lineIndex][position.columnIndex].value
+      area[nextPosition.lineIndex][nextPosition.columnIndex]
     )
     ? true
     : false;
+};
+
+const getPosition = (
+  direction: Direction,
+  { lineIndex, columnIndex }: Position,
+  maxPosition: Position
+) => {
+  switch (direction) {
+    case "top":
+      return lineIndex > 0 ? { lineIndex: lineIndex - 1, columnIndex } : null;
+    case "bottom":
+      return lineIndex < maxPosition.lineIndex
+        ? { lineIndex: lineIndex + 1, columnIndex }
+        : null;
+    case "left":
+      return columnIndex > 0
+        ? { lineIndex, columnIndex: columnIndex - 1 }
+        : null;
+    case "right":
+      return columnIndex < maxPosition.columnIndex
+        ? { lineIndex, columnIndex: columnIndex + 1 }
+        : null;
+  }
 };
