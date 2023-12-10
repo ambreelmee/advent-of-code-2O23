@@ -1,6 +1,6 @@
 type Pipe = "|" | "-" | "L" | "J" | "7" | "F" | "S";
 type Ground = ".";
-type PointValue = Pipe | Ground;
+type Tile = Pipe | Ground;
 
 type Direction = "top" | "bottom" | "left" | "right";
 type Position = {
@@ -9,7 +9,7 @@ type Position = {
 };
 type DirectionPosition = Record<Direction, Position | null>;
 
-type Point = DirectionPosition & { value: PointValue };
+type Point = DirectionPosition & { value: Tile };
 type PointInformation = Point & {
   connections: Record<Direction, boolean>;
 };
@@ -19,7 +19,7 @@ export const formatData = (input: string[]): Area => {
   const area = input.map((line, lineIndex) =>
     line.split("").map((point, pointIndex) => {
       const pointInformation = {
-        value: point as PointValue,
+        value: point as Tile,
         top:
           lineIndex > 0
             ? { lineIndex: lineIndex - 1, columnIndex: pointIndex }
@@ -50,8 +50,31 @@ export const formatData = (input: string[]): Area => {
   );
 };
 
+
+export const findLoopWithoutRecurrence = (area: Area) => {
+  const SPosition = findSPosition(area);
+  const SPointInformation = area[SPosition.lineIndex][SPosition.columnIndex];
+  const loopPositions = [SPosition] as Position[];
+  let nextPosition = getNextPosition(SPointInformation, null);
+  while (!isSamePosition(nextPosition, SPosition)) {
+    if (nextPosition === null) {
+      return loopPositions;
+    }
+    loopPositions.push(nextPosition);
+    const currentPointInformation =
+      area[nextPosition.lineIndex][nextPosition.columnIndex];
+    nextPosition = getNextPosition(
+      currentPointInformation,
+      loopPositions[loopPositions.length - 2]
+    );
+  }
+  return loopPositions;
+};
+
+
 export let stepCount = 0;
 
+//for some reason it's not working on the input
 export const findLoop = (
   area: Area,
   currentPosition: Position,
@@ -78,28 +101,25 @@ const getNextPosition = (
   pointInformation: PointInformation,
   previousPosition: Position | null
 ): Position | null => {
-  if (isConnection("left", pointInformation, previousPosition)) {
-    return pointInformation.left;
-  }
-  if (isConnection("right", pointInformation, previousPosition)) {
-    return pointInformation.right;
-  }
-  if (isConnection("top", pointInformation, previousPosition)) {
-    return pointInformation.top;
-  }
-  if (isConnection("bottom", pointInformation, previousPosition)) {
-    return pointInformation.bottom;
-  }
-  return null;
+  const nextDirection = Object.entries(pointInformation.connections)
+    .filter(([, value]) => value)
+    .map(([string]) => string as Direction)
+    .find((direction) =>
+      isConnection(direction, pointInformation, previousPosition)
+    );
+  return nextDirection ? pointInformation[nextDirection] : null;
 };
 
 const isConnection = (
   direction: Direction,
   pointInformation: PointInformation,
   previousPosition: Position | null
-) =>
-  pointInformation.connections[direction] &&
-  !isSamePosition(previousPosition, pointInformation[direction]);
+) => {
+  return (
+    pointInformation.connections[direction] &&
+    !isSamePosition(previousPosition, pointInformation[direction])
+  );
+};
 
 const isSamePosition = (
   position1: Position | null,
