@@ -3,12 +3,13 @@ type Ground = ".";
 type Tile = Pipe | Ground;
 
 type Direction = "top" | "bottom" | "left" | "right";
-type Position = {
+export const allDirections = ["left", "top", "bottom", "right"] as Direction[];
+export type Position = {
   lineIndex: number;
   columnIndex: number;
 };
 
-type Point = {
+export type Point = {
   connections: Direction[];
   value: Tile;
   position: Position;
@@ -63,7 +64,7 @@ const getNextPosition = (
     : null;
 };
 
-const isSamePosition = (
+export const isSamePosition = (
   position1: Position | null,
   position2: Position | null
 ) => {
@@ -114,7 +115,7 @@ const getPossibleDirections = (value: Tile): Direction[] => {
     case "F":
       return ["bottom", "right"];
     case "S":
-      return ["top", "bottom", "left", "right"];
+      return allDirections;
     default:
       throw new Error("unhandled case");
   }
@@ -130,10 +131,6 @@ const hasConnection = (
   const nextPosition = getPosition(direction, position, {
     lineIndex: area.length - 1,
     columnIndex: line.length - 1,
-  });
-  console.log({
-    line: area[position.lineIndex][position.columnIndex],
-    nextPosition,
   });
   switch (direction) {
     case "top":
@@ -159,7 +156,7 @@ const hasConnection = (
     : false;
 };
 
-const getPosition = (
+export const getPosition = (
   direction: Direction,
   { lineIndex, columnIndex }: Position,
   maxPosition: Position
