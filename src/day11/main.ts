@@ -1,10 +1,11 @@
 import { readTextFile } from "../utils";
-import { addUniverseExpansion } from "./utils";
+import { addUniverseExpansion, getShortestPath } from "./utils";
 
 const main = () => {
-  const input = readTextFile(11, "example");
+  const input = readTextFile(11, "input");
   const data = addUniverseExpansion(input);
-  console.log({ data });
+  const result = getShortestPath(data);
+  console.log({ result });
 };
 
 main();
