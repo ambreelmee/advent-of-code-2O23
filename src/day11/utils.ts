@@ -1,21 +1,20 @@
-type Universe = string[][];
-interface Position {
+export type Universe = string[][];
+export interface Position {
   lineIndex: number;
   columnIndex: number;
 }
 
-export const getShortestPath = (universe: Universe) => {
-  const planetsPosition = getPlanetsPositions(universe);
+export const getShortestPath = (planetsPosition: Position[]) => {
   const allPaths = planetsPosition.reduce(
     (shortestPathsBetweenPairs, originPlanet, planetIndex) => [
       ...shortestPathsBetweenPairs,
       ...planetsPosition
-        .slice(planetIndex + 1)
+        .slice(planetIndex)
         .map((targetPlanet) => getShortestDistance(originPlanet, targetPlanet)),
     ],
     [] as number[]
   );
-  return allPaths.reduce((sum, distance) => sum + distance, 0)
+  return allPaths.reduce((sum, distance) => sum + distance, 0);
 };
 
 const getShortestDistance = (planet1: Position, planet2: Position) => {
@@ -25,7 +24,7 @@ const getShortestDistance = (planet1: Position, planet2: Position) => {
   );
 };
 
-const getPlanetsPositions = (universe: Universe) => {
+export const getPlanetsPositions = (universe: Universe) => {
   const planetsPosition: Position[] = [];
   universe.forEach((line, lineIndex) => {
     line.forEach((point, columnIndex) => {
@@ -37,26 +36,5 @@ const getPlanetsPositions = (universe: Universe) => {
   return planetsPosition;
 };
 
-export const addUniverseExpansion = (data: string[]) => {
-  const formattedData = data.map((line) => line.split(""));
-  const withHorizontalExpansion = doubleEmptyLines(formattedData);
-
-  return transposeArray(
-    doubleEmptyLines(transposeArray(withHorizontalExpansion))
-  );
-};
-
-const doubleEmptyLines = (data: Universe) => {
-  const dataWithExtraLines = [] as Universe;
-  data.forEach((line) => {
-    dataWithExtraLines.push(line);
-    const isEmpty = new Set(line).size === 1;
-    if (isEmpty) {
-      dataWithExtraLines.push(line);
-    }
-  });
-  return dataWithExtraLines;
-};
-
-const transposeArray = (array: Universe) =>
+export const transposeArray = (array: Universe) =>
   array[0].map((_, colIndex) => array.map((row) => row[colIndex]));
