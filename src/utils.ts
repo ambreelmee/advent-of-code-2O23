@@ -9,6 +9,6 @@ export const readTextFile = (day: number, filename: string) => {
     .readFileSync(path.join(__dirname, `./day${day}/${filename}.txt`))
     .toString()
     .split("\n")
-    .filter((line) => line !== "");
+    .slice(0, -1);
   return input;
 };
