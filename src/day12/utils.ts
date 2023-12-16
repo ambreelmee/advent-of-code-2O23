@@ -1,6 +1,6 @@
 type SpringCondition = "." | "#" | "?";
 
-interface Springs {
+export interface Springs {
   conditions: string[];
   damagedGroups: number[];
 }
@@ -15,20 +15,24 @@ export const formatData = (input: string[]) =>
   });
 
 export const getTotalNumberOfArrangements = (allSPrings: Springs[]) => {
-  return allSPrings.reduce(
-    (sum, springs) => sum + getPossibleArrangements(springs).length,
-    0
-  );
+  return allSPrings.reduce((sum, springs) => {
+    return (
+      sum + getPossibleArrangements(springs.conditions, springs.damagedGroups)
+    );
+  }, 0);
 };
 
-const getPossibleArrangements = (springs: Springs) => {
-  const allArrangements = generateAllConditions(springs.conditions);
+export const getPossibleArrangements = (
+  conditions: string[],
+  damagedGroups: number[]
+) => {
+  const allArrangements = generateAllConditions(conditions);
   return allArrangements.filter((arrangement) =>
-    isArrangementValid(arrangement, springs.damagedGroups)
-  );
+    isArrangementValid(arrangement, damagedGroups)
+  ).length;
 };
 
-const generateAllConditions = (conditions: string[]) => {
+export const generateAllConditions = (conditions: string[]) => {
   return conditions.reduce(
     (possibleConditions, condition) => {
       if (condition === "?") {
@@ -48,7 +52,10 @@ const generateAllConditions = (conditions: string[]) => {
   );
 };
 
-const isArrangementValid = (conditions: string[], damagedGroups: number[]) => {
+export const isArrangementValid = (
+  conditions: string[],
+  damagedGroups: number[]
+) => {
   const groups = getGroup(conditions);
   return (
     groups.length == damagedGroups.length &&
